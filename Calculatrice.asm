@@ -9,13 +9,14 @@
                                         ;|______________________________________|    
 ;________________________________________________________________________________________________________________________
 ; les valeurs autorisées sont de 0 a 65535 (FFFF)
+.286
 SSEG SEGMENT STACK
         DB      32 DUP ("STACK---")
 SSEG ENDS
 
 DSEG SEGMENT
         msg1 db 0Dh,0Ah, 0Dh,0Ah, 'Entrer le premier nombre: $'
-        msg2 db "choisisez un operateur:    +  -  *  /     : $"
+        msg2 db "choisisez un operateur:    +  -  *  /  .   : $"
         msg3 db "Entrer le deuxieme nombre: $"
         msg4 db  0dh,0ah , 'resultat : $' 
         msg5 db  0dh,0ah , 'reste : $' 
@@ -24,7 +25,7 @@ DSEG SEGMENT
         reste dw  ?
         x dw 2,"$"
         moins      DB      ?       ; on l'utilise pour le carry flag.
-        ; operateur peuvent etre: '+','-','*','/' .
+        ; operateur peuvent etre: '+','-','*','/','.' .
         opr db ?
         ; first and second number:
         num1 dw ?
@@ -72,7 +73,7 @@ MAIN PROC FAR
 	;pour verfier que le opr entrer est valide
         ;_______________________________________________
 	VERIF:         
-	;afficher le msg2: choisisez un operateur:    +  -  *  /     :
+	;afficher le msg2: choisisez un operateur:    +  -  *  /  .   :
 	                LEA    DX, MSG2
 	                MOV    AH, 09H
 	                INT    21H
@@ -124,8 +125,11 @@ MAIN PROC FAR
 
 	                CMP    OPR, '/'
 	                JE     DO_DIV
+	                
+	                CMP    OPR, '.'
+	                JE     DO_PGCD
 ;________________________________________________________________________________________________________________________
-	ADDITION:            
+ADDITION:            
 	                MOV    AX, NUM1
 	                ADD    AX, NUM2
 	                CALL   AFF_RES        	; AFFICHER LE RESULTAT
@@ -233,6 +237,38 @@ MAIN PROC FAR
 	                LEA    DX, MSG5
 	                CALL   RESULT         	;AFFICHER LE RESTE ET ON PREND COMPTE DE RETENUE
 	                JMP    FIN
+;________________________________________________________________________________________________________________________
+	DO_PGCD:
+	; but obtenir le PGCD des deux nombres.
+					MOV	   AX,NUM1
+			CAS0:
+					CMP	   AX,0
+					JE     CAS1
+					CMP	   NUM2,0
+					JE     CAS2
+			CAS3:					;NUM1 et NUM2 diff de 0
+					CMP    AX,NUM2
+					JGE    SMBR1
+					JL     SMBR2
+			SMBR1:					;Soustraction sur le membre 1 soit num1
+	                SUB    AX, NUM2
+	                JMP    CAS0
+	        SMBR2:
+					SUB    NUM2, AX
+	                JMP    CAS0
+	        
+			CAS1:					;NUM1 est egale a 0 resultat cest NUM2
+					MOV    AX, NUM2
+					CALL   AFF_RES
+					JMP    FIN
+					
+			CAS2:					;NUM2 est egale a 0 resultat cest NUM1
+					MOV    AX, NUM1
+					CALL   AFF_RES
+					JMP    FIN
+			
+					
+					
 ;________________________________________________________________________________________________________________________
 	;scan_num est INSPRIRE de emu8086.inc 
 	;avoir un nombre signee
@@ -417,8 +453,8 @@ AFF_RES PROC
 	POSITIVE:       
 	                CALL   AFF_RES_NS
 	PRINTED:        
-	                POP    AX
-	                POP    DX
+	                POP    AX   ;res
+	                POP    DX   ;retenue
 	                RET
 AFF_RES ENDP
 ;________________________________________________________________________________________________________________________
