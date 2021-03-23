@@ -1,11 +1,11 @@
 ;________________________________________________________________________________________________________________________
                                          ;o͜o╚═════ஜ۩-Calculatrice-۩ஜ═════╝o͜o
-                                        ;|	         IUT METZ		|
+                                        ;|	         IUT METZ					|
                                         ;|         1A DUT Informatique          |
-                                        ;|				        |
+                                        ;|				       					|
                                         ;|          Projet Assembleur           |
-                                        ;|	      Omar Elloumi		|
-                                        ;|	     Younes Ghoniem		|
+                                        ;|	      Omar Elloumi					|
+                                        ;|	     Younes Ghoniem					|
                                         ;|______________________________________|    
 ;________________________________________________________________________________________________________________________
 ; les valeurs autorisées sont de 0 a 65535 (FFFF)
@@ -43,7 +43,7 @@ insert    MACRO   car
         INT     10h     
         POP     AX
 ENDM
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;________________________________________________________________________________________________________________________
 CSEG SEGMENT 'CODE'
 ASSUME CS:CSEG, SS:SSEG, DS:DSEG
 MAIN PROC FAR
@@ -129,8 +129,7 @@ MAIN PROC FAR
 	                CMP    OPR, '.'
 	                JE     DO_PGCD
 ;________________________________________________________________________________________________________________________
-	ADDITION:       
-	          
+ADDITION:            
 	                MOV    AX, NUM1
 	                ADD    AX, NUM2
 	                CALL   AFF_RES        	; AFFICHER LE RESULTAT
@@ -186,9 +185,7 @@ MAIN PROC FAR
 	                DEC    X
 
 	        NEXT2:          
-	                CMP    X,1
-	                JE     NEGATIF
-	                CMP    X,3
+	                CMP    X,2
 	                JE     NEGATIF
 	                CMP    X,0
 	                JE     DIVIS
@@ -214,8 +211,26 @@ MAIN PROC FAR
 
 	                CALL   AFF_RES        	; AFFICHER RESULTAT
 	                JMP    FIN
-                
 	        AFF_RESTE:      
+					CMP	   X,2
+					JE	   A_REGLER
+					JMP    DEJA_REGLER
+			A_REGLER:
+					CMP    sn1,1
+					JE	   TYPE1
+					jmp    DEJA_REGLER
+				TYPE1:
+					INC    AX
+					CALL   AFF_RES
+					MOV    DH,00h
+					SUB	   NUM2,DX
+					MOV    DX,NUM2
+					MOV    BL,DL
+	                CALL   CHANGE         	;CHANGER LA FORME DU RESTE
+	                LEA    DX, MSG5
+	                CALL   RESULT         	;AFFICHER LE RESTE ET ON PREND COMPTE DE RETENUE
+	                JMP    FIN	
+			DEJA_REGLER:
 	                CALL   AFF_RES
 	                MOV    BL,DL
 	                CALL   CHANGE         	;CHANGER LA FORME DU RESTE
