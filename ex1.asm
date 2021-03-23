@@ -40,8 +40,9 @@ INSERT MACRO   CAR
 	       POP  AX
 ENDM
 ;________________________________________________________________________________________________________________________
-ORG 100H
+
 CODE SEGMENT
+ORG 100H
 	MAIN:           
         ;declarer les donnees
 	                MOV    AX,DATA
