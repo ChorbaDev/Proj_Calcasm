@@ -9,43 +9,48 @@
                                         ;|______________________________________|    
 ;________________________________________________________________________________________________________________________
 ; les valeurs autorisées sont de 0 a 65535 (FFFF)
-ASSUME DS:DATA, CS:CODE
-DATA SEGMENT
-	MSG1  DB 0DH,0AH, 0DH,0AH, 'ENTRER LE PREMIER NOMBRE: $'
-	MSG2  DB "CHOISISEZ UN OPERATEUR:    +  -  *  /     : $"
-	MSG3  DB "ENTRER LE DEUXIEME NOMBRE: $"
-	MSG4  DB 0DH,0AH , 'RESULTAT : $'
-	MSG5  DB 0DH,0AH , 'RESTE : $'
-	MSG6  DB 0DH,0AH , 'DIVISION PAR 0 EST IMPOSSIBLE$'
-	RESTE DW ?
-	X     DW 2,"$"
-	MOINS DB ?                                              	; on l'utilise pour le carry flag.
-	; operateurs peuvent etre: '+','-','*','/' .
-	OPR   DB ?
-	; first and second number:
-	NUM1  DW ?
-	NUM2  DW ?
-	SN1   DB 0
-	SN2   DB 0
-	REST  DB 0
-DATA ENDS
-;________________________________________________________________________________________________________________________
-; cette macro est INSPRIRE de emu8086.inc 
+SSEG SEGMENT STACK
+        DB      32 DUP ("STACK---")
+SSEG ENDS
+
+DSEG SEGMENT
+        msg1 db 0Dh,0Ah, 0Dh,0Ah, 'Entrer le premier nombre: $'
+        msg2 db "choisisez un operateur:    +  -  *  /     : $"
+        msg3 db "Entrer le deuxieme nombre: $"
+        msg4 db  0dh,0ah , 'resultat : $' 
+        msg5 db  0dh,0ah , 'reste : $' 
+        msg6 db  0dh,0ah , 'Division par 0 est impossible$' 
+		DIX    DW     10             	; utilisee pour  multiplier/diviser dans SCAN_NUM & AFF_RES_NS.
+        reste dw  ?
+        x dw 2,"$"
+        moins      DB      ?       ; on l'utilise pour le carry flag.
+        ; operateur peuvent etre: '+','-','*','/' .
+        opr db ?
+        ; first and second number:
+        num1 dw ?
+        num2 dw ?
+        sn1 DB 0
+        sn2 DB 0
+        rest db 0
+DSEG ENDS
+;;; cette macro est INSPRIRE de emu8086.inc ;;;
 ; cette marco ecris un caractere dans AL et avance
-INSERT MACRO   CAR
-	       PUSH AX
-	       MOV  AL, CAR
-	       MOV  AH, 0EH
-	       INT  10H
-	       POP  AX
+insert    MACRO   car
+        PUSH    AX
+        MOV     AL, car
+        MOV     AH, 0Eh
+        INT     10h     
+        POP     AX
 ENDM
-;________________________________________________________________________________________________________________________
-ORG 100H
-CODE SEGMENT
-	MAIN:           
-        ;declarer les donnees
-	                MOV    AX,DATA
-	                MOV    DS,AX
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CSEG SEGMENT 'CODE'
+ASSUME CS:CSEG, SS:SSEG, DS:DSEG
+MAIN PROC FAR
+        PUSH DS
+        PUSH 0
+        ;;
+        mov ax,DSEG
+        mov ds,ax
 	;affichage de msg1: Entrer le premier nombre
 	                LEA    DX, MSG1
 	                MOV    AH, 09H
@@ -53,7 +58,7 @@ CODE SEGMENT
 	; avoir un nombre signee
 	; le resultat est enregistre dans cx
 	                CALL   SCAN_NUM
-	                CMP    CS:MOINS,1
+	                CMP    MOINS,1
 	                JE     S_N1
 	                JMP    SUITE
 	S_N1:           
@@ -91,7 +96,7 @@ CODE SEGMENT
 	; le resultat est enregistre dans cx
 
 	                CALL   SCAN_NUM
-	                CMP    CS:MOINS,1
+	                CMP    MOINS,1
 	                JE     S_N2
 	                JMP    SUIT
 	S_N2:           
@@ -240,7 +245,7 @@ SCAN_NUM PROC
 	                MOV    CX, 0
 
 	; remettre le flag
-	                MOV    CS:MOINS, 0
+	                MOV    MOINS, 0
 
 	CHIFFRE_SUIVANT:
 	; obtenir le caractère du clavier
@@ -265,7 +270,7 @@ SCAN_NUM PROC
 	                JNE    VERIF_RETOUR
 	                MOV    DX, 0          	; si c'est le cas, on retire le chiffre precedent
 	                MOV    AX, CX         	; division:
-	                DIV    CS:dix         	; AX = DX:AX / 10 (DX-rem).
+	                iDIV    dix         	; AX = DX:AX / 10 (DX-rem).
 	                MOV    CX, AX
 	                INSERT ' '            	; position claire
 	                INSERT 8              	; retour une autre fois
@@ -287,7 +292,7 @@ SCAN_NUM PROC
 	; multiplier CX par 10
 	                PUSH   AX
 	                MOV    AX, CX
-	                MUL    CS:dix         	; DX:AX = AX*10
+	                iMUL    dix         	; DX:AX = AX*10
 	                MOV    CX, AX
 	                POP    AX
 
@@ -308,7 +313,7 @@ SCAN_NUM PROC
 	                JMP    CHIFFRE_SUIVANT
 
 	SET_MINUS:      
-	                MOV    CS:moins, 1
+	                MOV    moins, 1
 	                JMP    CHIFFRE_SUIVANT
 
 	T_GRAND2:       
@@ -316,7 +321,7 @@ SCAN_NUM PROC
 	                MOV    DX, 0          	; DX était nul avant la sauvegarde
 	T_GRAND1:       
 	                MOV    AX, CX
-	                DIV    CS:dix         	; reverse last DX:AX = AX*10, make AX = DX:AX / 10
+	                iDIV    dix         	; reverse last DX:AX = AX*10, make AX = DX:AX / 10
 	                MOV    CX, AX
 	                INSERT 8              	; retour.
 	                INSERT ' '            	; remplacer le caractere par ' '.
@@ -328,7 +333,7 @@ SCAN_NUM PROC
 	; verifier si le flag est a 0 ou 1
 	; si 0 on arrete
 	;sinon NEG CX, (négation de cx)
-	                CMP    CS:MOINS, 0
+	                CMP    MOINS, 0
 	                JE     NON_MOINS
 	                NEG    CX
 	NON_MOINS:      
@@ -462,7 +467,7 @@ AFF_RES_NS PROC
 	                PUSH   AX
 	                MOV    DX, 0
 	                MOV    AX, BX
-	                DIV    CS:dix         	; AX = DX:AX / 10   (DX=le reste).
+	                iDIV    dix         	; AX = DX:AX / 10   (DX=le reste).
 	                MOV    BX, AX
 	                POP    AX
 
@@ -479,13 +484,8 @@ AFF_RES_NS PROC
 	                RET
 AFF_RES_NS ENDP
 ;________________________________________________________________________________________________________________________
-
-	DIX    DW     10             	; utilisee pour  multiplier/diviser dans SCAN_NUM & AFF_RES_NS.
-;________________________________________________________________________________________________________________________
-	FIN:            
-	                MOV    AH,4CH
-	                INT    21H
-
-CODE ENDS
-
-END MAIN
+fin:
+RET
+MAIN ENDP
+CSEG ENDS
+        END MAIN
