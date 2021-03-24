@@ -243,7 +243,9 @@ ADDITION:
 ;________________________________________________________________________________________________________________________
 	DO_PGCD:
 	; but obtenir le PGCD des deux nombres.
+					CALL	VER_NEG
 					MOV	   AX,NUM1
+			
 					
 			CAS0:
 					CMP	   AX,0
@@ -275,6 +277,9 @@ ADDITION:
 ;but obtenir le PPCM de deux nombres
 
 	DO_PPCM:
+					CALL	VER_NEG
+
+
 					MOV	   AX, NUM1			
 					MOV    BX, NUM2
 			ETA0:								;ETA0 etape initiale tanque num1!=num2 alors si num1>num2 eta1 sinon si num1<num2 eta2
@@ -292,7 +297,28 @@ ADDITION:
 			ETAF:
 												; lorsque NUM1=NUM2 après la boucle alors AX est le resultat
 					CALL   AFF_RES
-					JMP    FIN				
+					JMP    FIN	
+
+;________________________________________________________________________________________________________________________
+VER_NEG PROC 
+
+					CMP		SN1,1
+					JE		NEG1
+					JMP		CNT
+			NEG1:
+					NEG		NUM1
+			CNT:
+					CMP		SN2,1
+					JE		NEG2
+					JMP		FIN_VER_NEG
+			NEG2:
+					NEG		NUM2
+
+			FIN_VER_NEG:
+					RET
+
+
+VER_NEG ENDP			
 					
 ;________________________________________________________________________________________________________________________
 	;scan_num est INSPRIRE de emu8086.inc 
