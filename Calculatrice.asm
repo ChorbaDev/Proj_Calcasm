@@ -16,7 +16,7 @@ SSEG ENDS
 
 DSEG SEGMENT
         msg1 db 0Dh,0Ah, 0Dh,0Ah, 'Entrer le premier nombre: $'
-        msg2 db "choisisez un operateur:    +  -  *  /  .   : $"
+        msg2 db "choisisez un operateur:    +  -  *  /  .  ,  : $"
         msg3 db "Entrer le deuxieme nombre: $"
         msg4 db  0dh,0ah , 'resultat : $' 
         msg5 db  0dh,0ah , 'reste : $' 
@@ -25,7 +25,7 @@ DSEG SEGMENT
         reste dw  ?
         x dw 2,"$"
         moins      DB      ?       ; on l'utilise pour le carry flag.
-        ; operateur peuvent etre: '+','-','*','/','.' .
+        ; operateur peuvent etre: '+','-','*','/','.',',' .
         opr db ?
         ; first and second number:
         num1 dw ?
@@ -73,7 +73,7 @@ MAIN PROC FAR
 	;pour verfier que le opr entrer est valide
         ;_______________________________________________
 	VERIF:         
-	;afficher le msg2: choisisez un operateur:    +  -  *  /  .   :
+	;afficher le msg2: choisisez un operateur:    +  -  *  /  .  , :
 	                LEA    DX, MSG2
 	                MOV    AH, 09H
 	                INT    21H
@@ -128,6 +128,9 @@ MAIN PROC FAR
 	                
 	                CMP    OPR, '.'
 	                JE     DO_PGCD
+
+					CMP    OPR, ','
+	                JE     DO_PPCM
 ;________________________________________________________________________________________________________________________
 ADDITION:            
 	                MOV    AX, NUM1
@@ -241,6 +244,7 @@ ADDITION:
 	DO_PGCD:
 	; but obtenir le PGCD des deux nombres.
 					MOV	   AX,NUM1
+					
 			CAS0:
 					CMP	   AX,0
 					JE     CAS1
@@ -266,8 +270,29 @@ ADDITION:
 					MOV    AX, NUM1
 					CALL   AFF_RES
 					JMP    FIN
-			
-					
+
+;________________________________________________________________________________________________________________________
+;but obtenir le PPCM de deux nombres
+
+	DO_PPCM:
+					MOV	   AX, NUM1			
+					MOV    BX, NUM2
+			ETA0:								;ETA0 etape initiale tanque num1!=num2 alors si num1>num2 eta1 sinon si num1<num2 eta2
+					CMP		AX, BX
+					JE		ETAF
+					JG		ETA1
+					JL		ETA2
+
+			ETA1:								;ETA1 BX+=NUM2
+					ADD		BX, NUM2
+					JMP		ETA0
+			ETA2:								;ETA2 AX+=NUM2
+					ADD		AX, NUM1
+					JMP		ETA0		
+			ETAF:
+												; lorsque NUM1=NUM2 après la boucle alors AX est le resultat
+					CALL   AFF_RES
+					JMP    FIN				
 					
 ;________________________________________________________________________________________________________________________
 	;scan_num est INSPRIRE de emu8086.inc 
