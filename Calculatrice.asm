@@ -16,9 +16,8 @@ SSEG ENDS
 
 DSEG SEGMENT
         msg1 db 0Dh,0Ah, 0Dh,0Ah, 'Entrer le premier nombre: $'
-
-        msg2 db "choisissez un operateur:$"    
-         op_b db "Operation de Bases : $"
+        msg2 db "choisisez un operateur:$"
+		 op_b db "Operation de Bases : $"
          op_bb db "(+) (-) (*) (/)$"
          op_s db "Operation Supplementaire :$"
          op_pg db "PGCD : (.)$"
@@ -27,11 +26,9 @@ DSEG SEGMENT
         msg4 db  0dh,0ah , 'resultat : $' 
         msg5 db  0dh,0ah , 'reste : $' 
         msg6 db  0dh,0ah , 'Division par 0 est impossible$' 
-        msg7 db  0dh,0ah , 'Taper o/O pour recommencer? $' 
-		DIX  DW     10             	; utilisee pour  multiplier/diviser dans SCAN_NUM & AFF_RES_NS.
+		DIX    DW     10             	; utilisee pour  multiplier/diviser dans SCAN_NUM & AFF_RES_NS.
         reste dw  ?
         x dw 2,"$"
-		r db 0
         moins      DB      ?       ; on l'utilise pour le carry flag.
         ; operateur peuvent etre: '+','-','*','/','.',',' .
         opr db ?
@@ -51,13 +48,6 @@ insert    MACRO   car
         INT     10h     
         POP     AX
 ENDM
-CRLF MACRO
-	MOV AH,02H
-	MOV DL,0DH
-	int 21H
-	mov DL,0AH
-	int 21H
-	ENDM
 ;________________________________________________________________________________________________________________________
 CSEG SEGMENT 'CODE'
 ASSUME CS:CSEG, SS:SSEG, DS:DSEG
@@ -67,8 +57,6 @@ MAIN PROC FAR
         ;;
         mov ax,DSEG
         mov ds,ax
-		;
-		mov r,0
 	;affichage de msg1: Entrer le premier nombre
 	                LEA    DX, MSG1
 	                MOV    AH, 09H
@@ -85,18 +73,17 @@ MAIN PROC FAR
 	; stocker le premier nombre
 	                MOV    NUM1, CX
 	; nouveau ligne
-CRLF
+	                INSERT 0DH
+	                INSERT 0AH
 	;pour verfier que le opr entrer est valide
         ;_______________________________________________
-
 	VERIF:         
-    	            INSERT 0DH
+    	                INSERT 0DH
 	                INSERT 0AH       
 	;afficher le msg2: choisisez un operateur:    +  -  *  /  .  , :
                     LEA    DX, op_b
 	                MOV    AH, 09H
 	                INT    21H
-
 	                INSERT 0DH
 	                INSERT 0AH
                     LEA    DX, op_bb
@@ -125,13 +112,11 @@ CRLF
 ;
 	                MOV    AH, 1H
 	                INT    21H
-
 	                MOV    OPR, AL
 ;
 	                CMP    OPR, '*'
 	                JB     inter_verif
 	                CMP    OPR, '/'
-
 	                JA     inter_verif
 					jmp    next_nb
 			inter_verif:
@@ -139,7 +124,6 @@ CRLF
 next_nb:
 	                INSERT 0DH
 	                INSERT 0AH
-
 	; afficher le message3 : Entrer le deuxieme nombre
 	                LEA    DX, MSG3
 	                MOV    AH, 09H
@@ -185,39 +169,13 @@ inter_DO_PGCD:
 	                JE     inter_DO_PPCM
 inter_DO_PPCM:
 	Jmp     DO_PPCM
-
 ;________________________________________________________________________________________________________________________
 ADDITION:            
 	                MOV    AX, NUM1
 	                ADD    AX, NUM2
 	                CALL   AFF_RES        	; AFFICHER LE RESULTAT
-					CALL   recommence
-					CMP    r,0
-					je     eti_fin
-					jmp	   main
-					eti_fin:	
-					jmp fin
-recommence proc 
-                    CRLF
-                    MOV AH,9H
-                    LEA DX,msg7
-                    INT 21H
 
-                    mov ah,1h
-                    int 21h 
-                    
-                    CMP al,'O'
-                    jb  fin_rec
-                    CMP al,'O'
-                    je  rec
-					cmp al,'o'
-					je  rec
-					jmp fin_rec
-			    rec: 
-					inc r
-				fin_rec:
-					RET
-recommence endp
+	                JMP    FIN
 ;________________________________________________________________________________________________________________________
 	SOUSTR:         
 	                MOV    AX, NUM1
@@ -229,13 +187,9 @@ recommence endp
 	MULTI:          
 	                MOV    AX, NUM1
 	                IMUL   NUM2           ; (dx:ax) = ax * num2.
-                    CALL   AFF_RES
+
 	; dx sera ignorer (calc fonctionne uniquement avec des nombres pas tres grand).
 	                JMP    FIN
-qq:
-    jmp DO_PGCD
-aa: 
-    jmp DO_PPCM
 ;________________________________________________________________________________________________________________________
 	DO_DIV:       
 	; dx sera ignorer (calc fonctionne uniquement avec des nombres pas tres grand).
@@ -324,7 +278,6 @@ aa:
 	                LEA    DX, MSG5
 	                CALL   RESULT         	;AFFICHER LE RESTE ET ON PREND COMPTE DE RETENUE
 	                JMP    FIN
-
 ;________________________________________________________________________________________________________________________
 	DO_PGCD:
 	; but obtenir le PGCD des deux nombres.
@@ -404,13 +357,12 @@ VER_NEG PROC
 
 
 VER_NEG ENDP			
-
+					
 ;________________________________________________________________________________________________________________________
 	;scan_num est INSPRIRE de emu8086.inc 
 	;avoir un nombre signee
 	;le resultat est enregistre dans cx
 SCAN_NUM PROC
-
 	INSERT 0DH
 	INSERT 0AH
 	;Sauvgarder les registres
@@ -419,27 +371,15 @@ SCAN_NUM PROC
 	                PUSH   SI
 
 	                MOV    CX, 0
+
 	; remettre le flag
 	                MOV    MOINS, 0
-                 
-   ;;verification sur premier caractere 
-                    ;MOV    AH, 00h
-	                ;INT    16h
-                    ;CMP    AL, '-'
-	                ;JE     SET_MINUS
-                    ;jmp    aff_char
-                    ;SET_MINUS:      
-                    ;insert "-"
-	                ;MOV    moins, 1
-                    ;jmp    CHIFFRE_SUIVANT
-    ;CHIFFRE_AVANT_SUIVANT: 
-                    ;insert '='
+
 	CHIFFRE_SUIVANT:
 	; obtenir le caractère du clavier
-	; et le mettre dans AL et l'afficher
+	; et le mettre dans AL
 	                MOV    AH, 00h
 	                INT    16h
-
 
 	; verifier si il y a le signe moins
 	                CMP    AL, '-'
@@ -456,7 +396,6 @@ SCAN_NUM PROC
 	; si c'est le cas on a fini la saisie, sinon on passe a la verification suivante
 	 next_verif:   
 		            CMP    AL, 0Dh
-
 	                JNE    NON_ENTRER
 	                JMP    FIN_SAISIE
 	NON_ENTRER:     
@@ -464,10 +403,8 @@ SCAN_NUM PROC
 	                JNE    VERIF_RETOUR
 	                MOV    DX, 0          	; si c'est le cas, on retire le chiffre precedent
 	                MOV    AX, CX         	; division:
-	                iDIV   dix         	; AX = DX:AX / 10 (DX-rem).
+	                iDIV    dix         	; AX = DX:AX / 10 (DX-rem).
 	                MOV    CX, AX
-                    ;CMP    CX,0
-                    ;JE    CHIFFRE_AVANT_SUIVANT
 	                INSERT ' '            	; position claire
 	                INSERT 8              	; retour une autre fois
 	                JMP    CHIFFRE_SUIVANT
@@ -544,8 +481,6 @@ SCAN_NUM PROC
 	                RET
 
 SCAN_NUM ENDP
-inter_fin2:
-    jmp fin
 ;________________________________________________________________________________________________________________________
 ;pour changer le format du reste de ascii vers decimale
 CHANGE PROC
