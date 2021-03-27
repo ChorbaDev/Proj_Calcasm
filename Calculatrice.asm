@@ -16,7 +16,12 @@ SSEG ENDS
 
 DSEG SEGMENT
         msg1 db 0Dh,0Ah, 0Dh,0Ah, 'Entrer le premier nombre: $'
-        msg2 db "choisisez un operateur:    +  -  *  /  .  ,  : $"
+        msg2 db "choisisez un operateur:$"
+		 op_b db "Operation de Bases : $"
+         op_bb db "(+) (-) (*) (/)$"
+         op_s db "Operation Supplementaire :$"
+         op_pg db "PGCD : (.)$"
+         op_pp db "PPCM : (,)$"
         msg3 db "Entrer le deuxieme nombre: $"
         msg4 db  0dh,0ah , 'resultat : $' 
         msg5 db  0dh,0ah , 'reste : $' 
@@ -73,22 +78,52 @@ MAIN PROC FAR
 	;pour verfier que le opr entrer est valide
         ;_______________________________________________
 	VERIF:         
+    	                INSERT 0DH
+	                INSERT 0AH       
 	;afficher le msg2: choisisez un operateur:    +  -  *  /  .  , :
-	                LEA    DX, MSG2
+                    LEA    DX, op_b
 	                MOV    AH, 09H
 	                INT    21H
-	;avoir operateur:
+	                INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, op_bb
+	                MOV    AH, 09H
+	                INT    21H
+	                INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, op_s
+	                MOV    AH, 09H
+	                INT    21H
+	                INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, op_pp
+	                MOV    AH, 09H
+	                INT    21H
+	                INSERT 0DH
+	                INSERT 0AH
+                     LEA    DX, op_pg
+	                MOV    AH, 09H
+	                INT    21H
+	                INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, MSG2
+	                MOV    AH, 09H
+	                INT    21H
+;
 	                MOV    AH, 1H
 	                INT    21H
 	                MOV    OPR, AL
-	; nouveau ligne
+;
+	                CMP    OPR, '*'
+	                JB     inter_verif
+	                CMP    OPR, '/'
+	                JA     inter_verif
+					jmp    next_nb
+			inter_verif:
+				jmp VERIF
+next_nb:
 	                INSERT 0DH
 	                INSERT 0AH
-
-	                CMP    OPR, '*'
-	                JB     VERIF
-	                CMP    OPR, '/'
-	                JA     VERIF
 	; afficher le message3 : Entrer le deuxieme nombre
 	                LEA    DX, MSG3
 	                MOV    AH, 09H
@@ -127,10 +162,13 @@ MAIN PROC FAR
 	                JE     DO_DIV
 	                
 	                CMP    OPR, '.'
-	                JE     DO_PGCD
-
+	                JE     inter_DO_PGCD
+inter_DO_PGCD:
+	Jmp     DO_PGCD
 					CMP    OPR, ','
-	                JE     DO_PPCM
+	                JE     inter_DO_PPCM
+inter_DO_PPCM:
+	Jmp     DO_PPCM
 ;________________________________________________________________________________________________________________________
 ADDITION:            
 	                MOV    AX, NUM1
@@ -325,6 +363,8 @@ VER_NEG ENDP
 	;avoir un nombre signee
 	;le resultat est enregistre dans cx
 SCAN_NUM PROC
+	INSERT 0DH
+	INSERT 0AH
 	;Sauvgarder les registres
 	                PUSH   DX
 	                PUSH   AX
@@ -340,17 +380,22 @@ SCAN_NUM PROC
 	; et le mettre dans AL
 	                MOV    AH, 00h
 	                INT    16h
-	; et l'afficher
-	                MOV    AH, 0Eh
-	                INT    10h
 
 	; verifier si il y a le signe moins
 	                CMP    AL, '-'
-	                JE     SET_MINUS
+	                JNE    aff_char
+                    CMP    CX,0
+                    JE     SET_MINUS
+                    JMP    CHIFFRE_SUIVANT
+		; et l'afficher
+		aff_char:
+	                MOV    AH, 0Eh
+	                INT    10h
 
 	; verifier si le caractere taper c'est l'entrer
 	; si c'est le cas on a fini la saisie, sinon on passe a la verification suivante
-	                CMP    AL, 0Dh
+	 next_verif:   
+		            CMP    AL, 0Dh
 	                JNE    NON_ENTRER
 	                JMP    FIN_SAISIE
 	NON_ENTRER:     
@@ -401,7 +446,11 @@ SCAN_NUM PROC
 	                JMP    CHIFFRE_SUIVANT
 
 	SET_MINUS:      
-	                MOV    moins, 1
+                    CMP    moins,0
+                    JNE    SET
+                    insert '-'
+	           SET:
+                    MOV    moins, 1
 	                JMP    CHIFFRE_SUIVANT
 
 	T_GRAND2:       
