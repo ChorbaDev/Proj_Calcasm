@@ -16,6 +16,7 @@ SSEG ENDS
 
 DSEG SEGMENT
         msg1 db 0Dh,0Ah, 0Dh,0Ah, 'Entrer le premier nombre: $'
+
         msg2 db "choisissez un operateur:$"    
          op_b db "Operation de Bases : $"
          op_bb db "(+) (-) (*) (/)$"
@@ -87,43 +88,57 @@ MAIN PROC FAR
 CRLF
 	;pour verfier que le opr entrer est valide
         ;_______________________________________________
-	VERIF:  
-    CRLF       
+
+	VERIF:         
+    	            INSERT 0DH
+	                INSERT 0AH       
 	;afficher le msg2: choisisez un operateur:    +  -  *  /  .  , :
                     LEA    DX, op_b
 	                MOV    AH, 09H
 	                INT    21H
-CRLF
+
+	                INSERT 0DH
+	                INSERT 0AH
                     LEA    DX, op_bb
 	                MOV    AH, 09H
 	                INT    21H
-CRLF
+	                INSERT 0DH
+	                INSERT 0AH
                     LEA    DX, op_s
 	                MOV    AH, 09H
 	                INT    21H
-CRLF
+	                INSERT 0DH
+	                INSERT 0AH
                     LEA    DX, op_pp
 	                MOV    AH, 09H
 	                INT    21H
-CRLF
+	                INSERT 0DH
+	                INSERT 0AH
                      LEA    DX, op_pg
 	                MOV    AH, 09H
 	                INT    21H
-CRLF
+	                INSERT 0DH
+	                INSERT 0AH
                     LEA    DX, MSG2
 	                MOV    AH, 09H
 	                INT    21H
 ;
 	                MOV    AH, 1H
 	                INT    21H
+
 	                MOV    OPR, AL
 ;
 	                CMP    OPR, '*'
-	                JB     VERIF
+	                JB     inter_verif
 	                CMP    OPR, '/'
-	                JA     VERIF
-;
-CRLF
+
+	                JA     inter_verif
+					jmp    next_nb
+			inter_verif:
+				jmp VERIF
+next_nb:
+	                INSERT 0DH
+	                INSERT 0AH
 
 	; afficher le message3 : Entrer le deuxieme nombre
 	                LEA    DX, MSG3
@@ -163,10 +178,13 @@ CRLF
 	                JE     DO_DIV
 	                
 	                CMP    OPR, '.'
-	                JE     qq
-
+	                JE     inter_DO_PGCD
+inter_DO_PGCD:
+	Jmp     DO_PGCD
 					CMP    OPR, ','
-	                JE     aa
+	                JE     inter_DO_PPCM
+inter_DO_PPCM:
+	Jmp     DO_PPCM
 
 ;________________________________________________________________________________________________________________________
 ADDITION:            
@@ -392,7 +410,9 @@ VER_NEG ENDP
 	;avoir un nombre signee
 	;le resultat est enregistre dans cx
 SCAN_NUM PROC
-    CRLF
+
+	INSERT 0DH
+	INSERT 0AH
 	;Sauvgarder les registres
 	                PUSH   DX
 	                PUSH   AX
@@ -420,22 +440,23 @@ SCAN_NUM PROC
 	                MOV    AH, 00h
 	                INT    16h
 
-                    CMP    AL, '-'
+
+	; verifier si il y a le signe moins
+	                CMP    AL, '-'
 	                JNE    aff_char
                     CMP    CX,0
                     JE     SET_MINUS
                     JMP    CHIFFRE_SUIVANT
-
-	aff_char:
-                    MOV    AH, 0Eh
+		; et l'afficher
+		aff_char:
+	                MOV    AH, 0Eh
 	                INT    10h
-
-	; verifier si il y a le signe moins
 
 	; verifier si le caractere taper c'est l'entrer
 	; si c'est le cas on a fini la saisie, sinon on passe a la verification suivante
-    next_verif:
-	                CMP    AL, 0Dh
+	 next_verif:   
+		            CMP    AL, 0Dh
+
 	                JNE    NON_ENTRER
 	                JMP    FIN_SAISIE
 	NON_ENTRER:     
