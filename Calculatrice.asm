@@ -192,6 +192,7 @@ SOUSTR:
 MULTI:          
 	                MOV    AX, NUM1
 	                IMUL   NUM2           ; (dx:AX) = AX * num2.
+					CALL   AFF_RES        ; AFFICHER LE RESULTAT
 	                JMP    FIN			  ; dx sera ignorer (cALc fonctionne uniquement avec des nombres pas tres grand).
 ;________________________________________________________________________________________________________________________
 DO_DIV:       
