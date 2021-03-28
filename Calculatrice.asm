@@ -279,13 +279,11 @@ DO_DIV:
 					SUB	   NUM2,DX
 					MOV    DX,NUM2
 					MOV    BL,DL
-	                CALL   CHANGE         	;CHANGER LA FORME DU RESTE
-	                LEA    DX, MSG5
-	                CALL   RESULT         	;AFFICHER LE RESTE ET ON PREND COMPTE DE RETENUE
-	                JMP    FIN	
+					JMP	   prt_reste
 			DEJA_REGLER:
 	                CALL   AFF_RES
 	                MOV    BL,DL
+			prt_reste:		
 	                CALL   CHANGE         	;CHANGER LA FORME DU RESTE
 	                LEA    DX, MSG5
 	                CALL   RESULT         	;AFFICHER LE RESTE ET ON PREND COMPTE DE RETENUE
@@ -433,7 +431,7 @@ SCAN_NUM        PROC
 					MOV     CX, AX
 					POP     AX
 					; verifier si le nombre est tres grand
-					; (il faut que le resultat est de 16 bits)
+					; (il faut que le resultat soit de 16 bits)
 					CMP     DX, 0
 					JNE     t_grand1
 
@@ -616,7 +614,7 @@ AFF_RES_NS PROC
 	SKIP:           
 	;BX=BX/10
 	                PUSH   AX
-	                MOV    DX, 0
+	                MOV 	   DX, 0
 	                MOV    AX, BX
 	                iDIV    dix         	; AX = DX:AX / 10   (DX=le reste).
 	                MOV    BX, AX
