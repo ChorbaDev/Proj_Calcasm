@@ -419,13 +419,13 @@ SCAN_NUM        PROC
 					JMP     suppr_non_chiff
 			ok_AE_0:        
 					CMP     AL, '9'
-					JBE     verifer ; si le chiffre a passer tout les tests avec succes donc c'est verifier
+					JBE     verifier ; si le chiffre a passer tout les tests avec succes donc c'est verifier
 			suppr_non_chiff:       
 					insert  8       ; retour.
 					insert  ' '     ; remplacer le caractere par ' '.
 					insert  8       ; retour une autre fois        
 					JMP     chiffre_suivant        
-			verifer:
+			verifier:
 					; multiplier CX par 10 
 					PUSH    AX
 					MOV     AX, CX
