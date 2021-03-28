@@ -40,6 +40,7 @@ DSEG SEGMENT
         sn2   DB  0
         rest  DB  0
 		flag  DB  0
+
 DSEG ENDS
 ;________________________________________________________________________________________________________________________
 ; cette marco ecris un caractere dans AL et avance
@@ -54,6 +55,7 @@ ENDM
 CSEG SEGMENT 'CODE'
 ASSUME CS:CSEG, SS:SSEG, DS:DSEG
 MAIN PROC FAR
+
         PUSH 	DS
         PUSH	0
         MOV 	AX,DSEG
@@ -65,6 +67,7 @@ MAIN PROC FAR
 	                INT    21H
 					INSERT 0DH
 	                INSERT 0AH
+
 	;affichage de msg1: Entrer le premier nombre
 	                LEA    DX, MSG1
 	                MOV    AH, 09H
@@ -81,10 +84,12 @@ MAIN PROC FAR
 	; stocker le premier nombre
 	                MOV    NUM1, CX
 	; nouveau ligne
+
 	;pour verfier que le opr entrer est vALide
 ;________________________________________________________________________________________________________________________
 	VERIF:         
     	            INSERT 0DH
+
 	                INSERT 0AH       
 	;afficher le msg2: choisisez un operateur:    +  -  *  /  .  , :
                     LEA    DX, op_b
@@ -107,7 +112,9 @@ MAIN PROC FAR
 	                INT    21H
 	                INSERT 0DH
 	                INSERT 0AH
-                    LEA    DX, op_pg
+                  
+                  LEA    DX, op_pg
+
 	                MOV    AH, 09H
 	                INT    21H
 	                INSERT 0DH
@@ -121,6 +128,7 @@ MAIN PROC FAR
 	                MOV    OPR, AL
 ;verif si l'operateur entre *.../
 	                CMP    OPR, '*'
+
 	                JB     INTer_verif
 	                CMP    OPR, '/'
 	                JA     INTer_verif
@@ -174,11 +182,13 @@ INTer_DO_PGCD:
 	                JE     INTer_DO_PPCM
 INTer_DO_PPCM:
 	JMP     DO_PPCM
+
 ;________________________________________________________________________________________________________________________
 ADDITION:            
 	                MOV    AX, NUM1
 	                ADD    AX, NUM2
 	                CALL   AFF_RES        ; AFFICHER LE RESULTAT
+
 	                JMP    FIN
 ;________________________________________________________________________________________________________________________
 SOUSTR:         
@@ -189,9 +199,11 @@ SOUSTR:
 ;________________________________________________________________________________________________________________________
 MULTI:          
 	                MOV    AX, NUM1
+
 	                IMUL   NUM2           ; (dx:AX) = AX * num2.
 					CALL   AFF_RES        ; AFFICHER LE RESULTAT
 	                JMP    FIN			  ; dx sera ignorer (cALc fonctionne uniquement avec des nombres pas tres grand).
+
 ;________________________________________________________________________________________________________________________
 DO_DIV:       
 	; dx sera ignorer (cALc fonctionne uniquement avec des nombres pas tres grand).
@@ -354,6 +366,7 @@ VER_NEG ENDP
 ;________________________________________________________________________________________________________________________
 	;scan_num est INSPRIRE de emu8086.inc 
 	;avoir un nombre signee
+
 	;le resultat est enregistre dans CX
 SCAN_NUM        PROC    
         			;Sauvgarder les registres 
@@ -492,6 +505,7 @@ recommence proc
 					MOV ah,4ch
 					INT 21h
 recommence endp
+
 ;________________________________________________________________________________________________________________________
 ;pour changer le format du reste de ascii vers decimale
 CHANGE PROC
@@ -623,3 +637,4 @@ RET
 MAIN ENDP
 CSEG ENDS
         END MAIN
+		
