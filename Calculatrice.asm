@@ -81,8 +81,6 @@ MAIN PROC FAR
 	; stocker le premier nombre
 	                MOV    NUM1, CX
 	; nouveau ligne
-	                INSERT 0DH
-	                INSERT 0AH
 	;pour verfier que le opr entrer est vALide
 ;________________________________________________________________________________________________________________________
 	VERIF:         
