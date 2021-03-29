@@ -30,7 +30,7 @@ DSEG SEGMENT
 		 msg7 db  "Taper o/O pour recommencer: $"
 		DIX   DW  10  ; utilisee pour  multiplier/diviser dans SCAN_NUM & AFF_RES_NS.
         reste DW  ?
-        x     DW  2
+        x     DW  ?
 		v     DW  0
         moins DB  ?    ; on l'utilise pour le carry flag.
         opr   DB  ?	   ; operateur peuvent etre: '+','-','*','/','.',',' .
@@ -188,24 +188,25 @@ ADDITION:
 	                MOV    AX, NUM1
 	                ADD    AX, NUM2
 	                CALL   AFF_RES        ; AFFICHER LE RESULTAT
-
-	                JMP    FIN
+					CALL   recommence
 ;________________________________________________________________________________________________________________________
 SOUSTR:         
 	                MOV    AX, NUM1
 	                SUB    AX, NUM2
 	                CALL   AFF_RES        ; AFFICHER LE RESULTAT
-	                JMP    FIN
+					CALL   recommence
 ;________________________________________________________________________________________________________________________
 MULTI:          
 	                MOV    AX, NUM1
 
 	                IMUL   NUM2           ; (dx:AX) = AX * num2.
 					CALL   AFF_RES        ; AFFICHER LE RESULTAT
-	                JMP    FIN			  ; dx sera ignorer (cALc fonctionne uniquement avec des nombres pas tres grand).
+					CALL   recommence
+	               		  ; dx sera ignorer (cALc fonctionne uniquement avec des nombres pas tres grand).
 
 ;________________________________________________________________________________________________________________________
 DO_DIV:       
+MOV X,2
 	; dx sera ignorer (cALc fonctionne uniquement avec des nombres pas tres grand).
 	                CMP    NUM2,0          	;; verifier que le denumerateur est different de 0
 	                JE     IMPOSSIBLE
@@ -215,7 +216,7 @@ DO_DIV:
 	                MOV    AH,9H
 	                LEA    DX,MSG6
 	                INT    21H
-	                JMP    FIN
+	                CALL   recommence
 
 	        NEXTTT:         
 	                MOV    DX, 0
@@ -263,7 +264,7 @@ DO_DIV:
 	                JNZ    AFF_RESTE
 
 	                CALL   AFF_RES        	; AFFICHER RESULTAT
-	                JMP    FIN
+	                CALL   recommence
 	        AFF_RESTE:      
 					CMP	   X,2
 					JE	   A_REGLER
@@ -272,7 +273,7 @@ DO_DIV:
 					CMP    sn1,1
 					JE	   TYPE1
 					JMP    DEJA_REGLER
-				TYPE1:
+			TYPE1:
 					INC    AX
 					CALL   AFF_RES
 					MOV    DH,00h
@@ -282,19 +283,19 @@ DO_DIV:
 					JMP	   prt_reste
 			DEJA_REGLER:
 	                CALL   AFF_RES
-	                MOV    BL,DL
+	                MOV    BX,DX
 			prt_reste:		
 	                CALL   CHANGE         	;CHANGER LA FORME DU RESTE
-	                LEA    DX, MSG5
+					INSERT 0DH
+	                INSERT 0AH
+					LEA    DX, MSG5
 	                CALL   RESULT         	;AFFICHER LE RESTE ET ON PREND COMPTE DE RETENUE
-	                JMP    FIN
+	                CALL   recommence
 ;________________________________________________________________________________________________________________________
 	DO_PGCD:
 	; but obtenir le PGCD des deux nombres.
 					CALL	VER_NEG
-					MOV	   AX,NUM1
-			
-					
+					MOV	   AX,NUM1			
 			CAS0:
 					CMP	   AX,0
 					JE     CAS1
@@ -314,12 +315,12 @@ DO_DIV:
 			CAS1:					;NUM1 est egALe a 0 resultat cest NUM2
 					MOV    AX, NUM2
 					CALL   AFF_RES
-					JMP    FIN
+					CALL   recommence
 					
 			CAS2:					;NUM2 est egALe a 0 resultat cest NUM1
 					MOV    AX, NUM1
 					CALL   AFF_RES
-					JMP    FIN
+					CALL   recommence
 
 ;________________________________________________________________________________________________________________________
 ;but obtenir le PPCM de deux nombres
@@ -342,7 +343,7 @@ DO_DIV:
 			ETAF:
 												; lorsque NUM1=NUM2 après la boucle ALors AX est le resultat
 					CALL   AFF_RES
-					JMP    FIN	
+					CALL   recommence	
 ;________________________________________________________________________________________________________________________
 VER_NEG PROC
 					CMP		SN1,1
@@ -507,11 +508,13 @@ recommence endp
 ;________________________________________________________________________________________________________________________
 ;pour changer le format du reste de ascii vers decimale
 CHANGE PROC
-	                MOV    AH,0
+	                MOV    AH,BH
 	                MOV    AL,BL
 
 	                MOV    BL,10
 	                DIV    BL
+
+                    ADC    AH,0
 
 	                MOV    BL,AL
 	                MOV    BH,AH
@@ -523,6 +526,8 @@ CHANGE PROC
 	                MOV    AL,BL
 	                MOV    BL,10
 	                DIV    BL
+
+                ADC    AH,0
 
 	                MOV    BL,AL
 	                MOV    BH,AH
@@ -549,6 +554,7 @@ RESULT PROC
 	                MOV    DL,rest
 	                MOV    AH,02H
 	                INT    21H
+
 	                RET
 RESULT ENDP
 ;________________________________________________________________________________________________________________________
@@ -574,7 +580,7 @@ AFF_RES PROC
 			PRINTED:        
 	                POP    AX   ;res
 	                POP    DX   ;retenue
-					CALL   recommence
+					RET
 AFF_RES ENDP
 ;________________________________________________________________________________________________________________________
 	; cette procedure affiche les nombres non signee
