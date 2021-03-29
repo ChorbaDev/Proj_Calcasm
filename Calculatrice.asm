@@ -328,7 +328,7 @@ MOV X,2
 					CALL	VER_NEG
 					MOV	   AX, NUM1			
 					MOV    BX, NUM2
-			ETA0:								;ETA0 etape initiALe tanque num1!=num2 ALors si num1>num2 eta1 sinon si num1<num2 eta2
+			ETA0:								;ETA0 etape initiALe tant que num1!=num2 ALors si num1>num2 eta1 sinon si num1<num2 eta2
 					CMP		AX, BX
 					JE		ETAF
 					JG		ETA1
