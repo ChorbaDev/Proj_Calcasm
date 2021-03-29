@@ -30,6 +30,7 @@ DSEG SEGMENT
 		 msg7 db  "Taper o/O pour recommencer: $"
 		DIX   DW  10  ; utilisee pour  multiplier/diviser dans SCAN_NUM & AFF_RES_NS.
         reste DW  ?
+        res   DW  ?
         x     DW  ?
 		v     DW  0
         moins DB  ?    ; on l'utilise pour le carry flag.
@@ -40,6 +41,20 @@ DSEG SEGMENT
         sn2   DB  0
         rest  DB  0
 		flag  DB  0
+        aff1 DB    "         _____________________________$"
+		aff2 DB    "        |  _________________________| |$"
+		aff3_1 DB    "        | | $"
+		aff5 DB    "        | |_________________________| |$"
+		aff6 DB    "	|  ___ ___ ___   ___   _____  |$"
+		aff7 DB    "	| | 7 | 8 | 9 | | + | |PPCM | |$"
+		aff8 DB    "	| |___|___|___| |___| |_____| |$"
+		aff9 DB    "	| | 4 | 5 | 6 | | - | |PGCD | |$"
+		aff10 DB   "	| |___|___|___| |___| |_____| |$"
+		aff11 DB   "	| | 1 | 2 | 3 | | x |         |$"
+		aff12 DB   "	| |___|___|___| |___|         |$"
+		aff13 DB   "	| | . | 0 | = | | / |         |$"
+		aff14 DB   "	| |___|___|___| |___|         |$"
+		aff15 DB   "	|_____________________________|$"
 
 DSEG ENDS
 ;________________________________________________________________________________________________________________________
@@ -60,9 +75,10 @@ MAIN PROC FAR
         PUSH	0
         MOV 	AX,DSEG
         MOV 	DS,AX
+        
 					INSERT 0DH
 	                INSERT 0AH
-					 LEA    DX, MSG0
+					LEA    DX, MSG0
 	                MOV    AH, 09H
 	                INT    21H
 					INSERT 0DH
@@ -86,6 +102,7 @@ MAIN PROC FAR
 	; nouveau ligne
 
 	;pour verfier que le opr entrer est vALide
+    
 ;________________________________________________________________________________________________________________________
 	VERIF:         
     	            INSERT 0DH
@@ -156,9 +173,6 @@ MAIN PROC FAR
 	                MOV    NUM2, CX
 
 	; afficher le message4 : resultat
-	                LEA    DX, MSG4
-	                MOV    AH, 09H
-	                INT    21H
 
  ;_______________________________________________
 	; cALculer:
@@ -187,26 +201,27 @@ INTer_DO_PPCM:
 ADDITION:            
 	                MOV    AX, NUM1
 	                ADD    AX, NUM2
-	                CALL   AFF_RES        ; AFFICHER LE RESULTAT
+                    push ax
+	                CALL   affichage       ; AFFICHER LE RESULTAT
 					CALL   recommence
 ;________________________________________________________________________________________________________________________
 SOUSTR:         
 	                MOV    AX, NUM1
 	                SUB    AX, NUM2
-	                CALL   AFF_RES        ; AFFICHER LE RESULTAT
+	                CALL   affichage        ; AFFICHER LE RESULTAT
 					CALL   recommence
 ;________________________________________________________________________________________________________________________
 MULTI:          
 	                MOV    AX, NUM1
 
 	                IMUL   NUM2           ; (dx:AX) = AX * num2.
-					CALL   AFF_RES        ; AFFICHER LE RESULTAT
+					CALL   affichage        ; AFFICHER LE RESULTAT
 					CALL   recommence
 	               		  ; dx sera ignorer (cALc fonctionne uniquement avec des nombres pas tres grand).
 
 ;________________________________________________________________________________________________________________________
 DO_DIV:       
-MOV X,2
+                    MOV X,2
 	; dx sera ignorer (cALc fonctionne uniquement avec des nombres pas tres grand).
 	                CMP    NUM2,0          	;; verifier que le denumerateur est different de 0
 	                JE     IMPOSSIBLE
@@ -255,7 +270,7 @@ MOV X,2
 	                CMP    AX,0          	; comparer le resultat de division avec 0, si c le cas on decALe par un caractere et on le retire pour eviter d'afficher -0
 	                JE     SUPP_MOINS
 	                JMP    NEXTT
-	        SUPP_MOINS:    
+	        SUPP_MOINS:                 
 	                INSERT 8              	; retour.
 	                INSERT ' '            	; remplacer le moins par ' '.
 	                INSERT 8              	; retour une autre fois
@@ -263,7 +278,7 @@ MOV X,2
 	                CMP    DX, 0
 	                JNZ    AFF_RESTE
 
-	                CALL   AFF_RES        	; AFFICHER RESULTAT
+	                CALL   affichage        	; AFFICHER RESULTAT
 	                CALL   recommence
 	        AFF_RESTE:      
 					CMP	   X,2
@@ -275,21 +290,22 @@ MOV X,2
 					JMP    DEJA_REGLER
 			TYPE1:
 					INC    AX
-					CALL   AFF_RES
+					CALL   AFFICHAGE_RESULTAT
 					MOV    DH,00h
 					SUB	   NUM2,DX
 					MOV    DX,NUM2
 					MOV    BL,DL
 					JMP	   prt_reste
 			DEJA_REGLER:
-	                CALL   AFF_RES
+	                CALL   AFFICHAGE_RESULTAT
 	                MOV    BX,DX
 			prt_reste:		
 	                CALL   CHANGE         	;CHANGER LA FORME DU RESTE
 					INSERT 0DH
 	                INSERT 0AH
-					LEA    DX, MSG5
+					LEA    DX, aff3_1
 	                CALL   RESULT         	;AFFICHER LE RESTE ET ON PREND COMPTE DE RETENUE
+                    CALL   AFFICHAGE_RESTE
 	                CALL   recommence
 ;________________________________________________________________________________________________________________________
 	DO_PGCD:
@@ -314,12 +330,12 @@ MOV X,2
 	        
 			CAS1:					;NUM1 est egALe a 0 resultat cest NUM2
 					MOV    AX, NUM2
-					CALL   AFF_RES
+					CALL   affichage
 					CALL   recommence
 					
 			CAS2:					;NUM2 est egALe a 0 resultat cest NUM1
 					MOV    AX, NUM1
-					CALL   AFF_RES
+					CALL   affichage
 					CALL   recommence
 
 ;________________________________________________________________________________________________________________________
@@ -342,7 +358,7 @@ MOV X,2
 					JMP		ETA0		
 			ETAF:
 												; lorsque NUM1=NUM2 après la boucle ALors AX est le resultat
-					CALL   AFF_RES
+					CALL   affichage
 					CALL   recommence	
 ;________________________________________________________________________________________________________________________
 VER_NEG PROC
@@ -542,6 +558,9 @@ CHANGE ENDP
 RESULT PROC
 	                MOV    AH,09H
 	                INT    21H
+                    LEA    DX, MSG5
+                    MOV    AH,09H
+	                INT    21H
 
 	                MOV    DL,BL
 	                MOV    AH,02H
@@ -558,7 +577,192 @@ RESULT PROC
 	                RET
 RESULT ENDP
 ;________________________________________________________________________________________________________________________
-	; cette procedure affiche le nombre dans AX
+    AFFICHAGE_RESULTAT PROC
+                    PUSH   AX
+	                PUSH   BX
+	                PUSH   CX
+	                PUSH   DX
+                    mov    res,ax
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff1
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff2
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff3_1
+	                MOV    AH, 09H
+	                INT    21H
+                    LEA    DX, MSG4
+	                MOV    AH, 09H
+	                INT    21H
+                    mov    ax,res  
+                    CALL   aff_res
+                    POP    DX
+	                POP    CX
+	                POP    BX
+	                POP    AX
+	                RET
+    AFFICHAGE_RESULTAT ENDP
+    AFFICHAGE_RESTE PROC
+                    PUSH   AX
+	                PUSH   BX
+	                PUSH   CX
+	                PUSH   DX
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff5
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff6
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff7
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff8
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff9
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff10
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff11
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff12
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff13
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff14
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff15
+	                MOV    AH, 09H
+	                INT    21H
+                    POP    DX
+	                POP    CX
+	                POP    BX
+	                POP    AX
+	                RET
+    AFFICHAGE_RESTE ENDP
+    AFFICHAGE PROC
+                    PUSH   AX
+	                PUSH   BX
+	                PUSH   CX
+	                PUSH   DX
+                    mov    res,ax
+                     INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff1
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff2
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff3_1
+	                MOV    AH, 09H
+	                INT    21H
+                    LEA    DX, MSG4
+	                MOV    AH, 09H
+	                INT    21H
+                    mov    ax,res  
+                    CALL   aff_res
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff5
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff6
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff7
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff8
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff9
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff10
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff11
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff12
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff13
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff14
+	                MOV    AH, 09H
+	                INT    21H
+                    INSERT 0DH
+	                INSERT 0AH
+                    LEA    DX, aff15
+	                MOV    AH, 09H
+	                INT    21H
+                    POP    DX
+	                POP    CX
+	                POP    BX
+	                POP    AX
+	                RET
+    AFFICHAGE ENDP
+    	; cette procedure affiche le nombre dans AX
 	; utiliser avec AFF_RES_NS pour afficher les nombres non signee:
 AFF_RES PROC
 	                PUSH   DX
@@ -582,6 +786,7 @@ AFF_RES PROC
 	                POP    DX   ;retenue
 					RET
 AFF_RES ENDP
+
 ;________________________________________________________________________________________________________________________
 	; cette procedure affiche les nombres non signee
 AFF_RES_NS PROC
@@ -641,4 +846,3 @@ RET
 MAIN ENDP
 CSEG ENDS
         END MAIN
-		
