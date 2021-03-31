@@ -24,8 +24,9 @@ DSEG SEGMENT
         op_pg DB  0DH,0AH,"PGCD : (.)$",0DH,0AH 
         op_pp DB  0DH,0AH,"PPCM : (,)$",0DH,0AH 
         msg3  DB  0DH,0AH,"Entrer le deuxieme nombre: $",0DH,0AH 
-        msg4  DB  "resultat : $"  
-        msg5  DB  "reste : $" 
+        msg4  DB  "Resultat : $" 
+		msg8  DB  "Quotient : $" 
+        msg5  DB  "Reste : $" 
         msg6  DB  0DH,0AH,"Division par 0 est impossible$",0DH,0AH 
 		msg7  DB  0DH,0AH,"Taper o/O pour recommencer: $",0DH,0AH 
 		DIX   DW  10   
@@ -457,7 +458,7 @@ recommence endp
 	                MOV    AH, 09H
 	                INT    21H
 
-					LEA    DX, msg4
+					LEA    DX, msg8
 	                MOV    AH, 09H
 	                INT    21H
 
