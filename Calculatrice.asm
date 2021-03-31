@@ -8,54 +8,49 @@
                                         ;|	     Younes Ghoniem					|
                                         ;|______________________________________|    
 ;________________________________________________________________________________________________________________________
-; les vALeurs autorisées sont de 0 a 65535 (FFFF)
+; les valeurs autorisées sont de 0 a 65535 (FFFF)
 .286
 SSEG SEGMENT STACK
         DB      32 DUP ("STACK---")
 SSEG ENDS
 ;________________________________________________________________________________________________________________________
 DSEG SEGMENT
-		msg0  DB  "_______________________________$"
-        msg1  DB  "Entrer le premier nombre: $"
-        msg2  DB  "choisisez un operateur:$"
-		op_b  DB  "Operation de Bases : $"
-        op_bb DB  "(+) (-) (*) (/)$"
-        op_s  DB  "Operation Supplementaire :$"
-        op_pg DB  "PGCD : (.)$"
-        op_pp DB  "PPCM : (,)$"
-        msg3  DB  "Entrer le deuxieme nombre: $"
-        msg4  DB  "resultat : $" 
+		msg0  DB  0DH,0AH,"_______________________________$"
+        msg1  DB  0DH,0AH,"Entrer le premier nombre: $",0DH,0AH 
+        msg2  DB  0DH,0AH,"choisisez un operateur:$",0DH,0AH 
+		op_b  DB  0DH,0AH,"Operation de Bases : $",0DH,0AH 
+        op_bb DB  0DH,0AH,"(+) (-) (*) (/)$",0DH,0AH 
+        op_s  DB  0DH,0AH,"Operation Supplementaire :$",0DH,0AH 
+        op_pg DB  0DH,0AH,"PGCD : (.)$",0DH,0AH 
+        op_pp DB  0DH,0AH,"PPCM : (,)$",0DH,0AH 
+        msg3  DB  0DH,0AH,"Entrer le deuxieme nombre: $",0DH,0AH 
+        msg4  DB  "resultat : $"  
         msg5  DB  "reste : $" 
-        msg6  DB  "Division par 0 est impossible$" 
-		 msg7 db  "Taper o/O pour recommencer: $"
-		DIX   DW  10  ; utilisee pour  multiplier/diviser dans SCAN_NUM & AFF_RES_NS.
+        msg6  DB  0DH,0AH,"Division par 0 est impossible$",0DH,0AH 
+		msg7  DB  0DH,0AH,"Taper o/O pour recommencer: $",0DH,0AH 
+		DIX   DW  10   
         reste DW  ?
         res   DW  ?
-        x     DW  ?
-		v     DW  0
-        moins DB  ?    ; on l'utilise pour le carry flag.
-        opr   DB  ?	   ; operateur peuvent etre: '+','-','*','/','.',',' .
+        moins DB  ?    
+        opr   DB  ?	   
         num1  DW  ?
         num2  DW  ?
         sn1   DB  0
         sn2   DB  0
-        rest  DB  0
-		flag  DB  0
-        aff1 DB    "         _____________________________$"
-		aff2 DB    "        |  _________________________| |$"
-		aff3_1 DB    "        | | $"
-		aff5 DB    "        | |_________________________| |$"
-		aff6 DB    "	|  ___ ___ ___   ___   _____  |$"
-		aff7 DB    "	| | 7 | 8 | 9 | | + | |PPCM | |$"
-		aff8 DB    "	| |___|___|___| |___| |_____| |$"
-		aff9 DB    "	| | 4 | 5 | 6 | | - | |PGCD | |$"
-		aff10 DB   "	| |___|___|___| |___| |_____| |$"
-		aff11 DB   "	| | 1 | 2 | 3 | | x |         |$"
-		aff12 DB   "	| |___|___|___| |___|         |$"
-		aff13 DB   "	| | . | 0 | = | | / |         |$"
-		aff14 DB   "	| |___|___|___| |___|         |$"
-		aff15 DB   "	|_____________________________|$"
-
+        aff1  DB    "         _____________________________",0DH,0AH
+			  DB    "        |  _________________________| |$"
+		aff2  DB    0DH,0AH,"        | | $"
+		aff3  DB    0DH,0AH,"        | |_________________________| |",0DH,0AH
+			  DB    "	|  ___ ___ ___   ___   _____  |",0DH,0AH
+		 	  DB   	"	| | 7 | 8 | 9 | | + | |PPCM | |",0DH,0AH
+		      DB 	"	| |___|___|___| |___| |_____| |",0DH,0AH
+		 	  DB	"	| | 4 | 5 | 6 | | - | |PGCD | |",0DH,0AH
+		 	  DB	"	| |___|___|___| |___| |_____| |",0DH,0AH
+			  DB   	"	| | 1 | 2 | 3 | | x |         |",0DH,0AH
+		      DB   	"	| |___|___|___| |___|         |",0DH,0AH
+		      DB   	"	| | . | 0 | = | | / |         |",0DH,0AH
+		      DB   	"	| |___|___|___| |___|         |",0DH,0AH
+		      DB   	"	|_____________________________|$"
 DSEG ENDS
 ;________________________________________________________________________________________________________________________
 ; cette marco ecris un caractere dans AL et avance
@@ -70,112 +65,83 @@ ENDM
 CSEG SEGMENT 'CODE'
 ASSUME CS:CSEG, SS:SSEG, DS:DSEG
 MAIN PROC FAR
-
         PUSH 	DS
         PUSH	0
+
         MOV 	AX,DSEG
         MOV 	DS,AX
-        
-					INSERT 0DH
-	                INSERT 0AH
+					
 					LEA    DX, MSG0
 	                MOV    AH, 09H
 	                INT    21H
-					INSERT 0DH
-	                INSERT 0AH
-
-	;affichage de msg1: Entrer le premier nombre
-	                LEA    DX, MSG1
+					
+	                LEA    DX, MSG1						;affichage de msg1: Entrer le premier nombre
 	                MOV    AH, 09H
 	                INT    21H
-	; avoir un nombre signee
-	; le resultat est enregistre dans CX
-	                CALL   SCAN_NUM
+
+	                CALL   SCAN_NUM						; avoir un nombre signee et le resultat est enregistre dans CX
 	                CMP    MOINS,1
 	                JE     S_N1
-	                JMP    SUITE
+	                   JMP    SUITE
 	S_N1:           
 	                MOV    SN1,1
 	SUITE:          
-	; stocker le premier nombre
-	                MOV    NUM1, CX
-	; nouveau ligne
-
-	;pour verfier que le opr entrer est vALide
-    
+				
+	                MOV    NUM1, CX						; stocker le premier nombre
 ;________________________________________________________________________________________________________________________
-	VERIF:         
-    	            INSERT 0DH
-
-	                INSERT 0AH       
+	VERIF:            
 	;afficher le msg2: choisisez un operateur:    +  -  *  /  .  , :
                     LEA    DX, op_b
 	                MOV    AH, 09H
 	                INT    21H
-	                INSERT 0DH
-	                INSERT 0AH
+	                
                     LEA    DX, op_bb
 	                MOV    AH, 09H
 	                INT    21H
-	                INSERT 0DH
-	                INSERT 0AH
+	                
                     LEA    DX, op_s
 	                MOV    AH, 09H
 	                INT    21H
-	                INSERT 0DH
-	                INSERT 0AH
+	                
                     LEA    DX, op_pp
 	                MOV    AH, 09H
 	                INT    21H
-	                INSERT 0DH
-	                INSERT 0AH
+	                
                   
-                  LEA    DX, op_pg
-
+                  	LEA    DX, op_pg
 	                MOV    AH, 09H
 	                INT    21H
-	                INSERT 0DH
-	                INSERT 0AH
+	                
                     LEA    DX, MSG2
 	                MOV    AH, 09H
 	                INT    21H
-;lire un caractere du clavier 
-	                MOV    AH, 1H
+ 
+	                MOV    AH, 1H							;lire un caractere du clavier
 	                INT    21H
 	                MOV    OPR, AL
-;verif si l'operateur entre *.../
+						                                    ;verif si l'operateur entre *.../
 	                CMP    OPR, '*'
-
-	                JB     INTer_verif
-	                CMP    OPR, '/'
-	                JA     INTer_verif
-					JMP    next_nb
-			INTer_verif:
+	                JB     inter_verif
+	            	   CMP    OPR, '/'
+	               	   JA     inter_verif
+						  JMP    next_nb
+			inter_verif:
 					JMP	   VERIF
-	next_nb:
-	                INSERT 0DH
-	                INSERT 0AH
-	; afficher le message3 : Entrer le deuxieme nombre
+	next_nb:            
 	                LEA    DX, MSG3
 	                MOV    AH, 09H
 	                INT    21H
-	; avoir un nombre signee
-	; le resultat est enregistre dans CX
-	                CALL   SCAN_NUM
+	
+	                CALL   SCAN_NUM							; avoir un nombre signee et le resultat sera enregistre dans CX
 	                CMP    MOINS,1
 	                JE     S_N2
-	                JMP    SUIT
+	              	   JMP    SUIT
 	S_N2:           
 	                MOV    SN2,1
 ;_____________________________________________________________________________________________________________
 	SUIT:                   
-	; stocker le deuxieme nombre
-	                MOV    NUM2, CX
-
-	; afficher le message4 : resultat
-
+	                MOV    NUM2, CX							; stocker le deuxieme nombre
  ;_______________________________________________
-	; cALculer:
 	                CMP    OPR, '+'
 	                JE     ADDITION
 
@@ -187,126 +153,90 @@ MAIN PROC FAR
 
 	                CMP    OPR, '/'
 	                JE     DO_DIV
-	                
+ 
 	                CMP    OPR, '.'
-	                JE     INTer_DO_PGCD
-INTer_DO_PGCD:
-	JMP     DO_PGCD
-					CMP    OPR, ','
-	                JE     INTer_DO_PPCM
-INTer_DO_PPCM:
-	JMP     DO_PPCM
+	                JE     inter_DO_PGCD
 
+					CMP    OPR, ','
+	                JE     inter_DO_PPCM
+
+				inter_DO_PGCD:		
+					JMP     DO_PGCD
+				inter_DO_PPCM:
+					JMP     DO_PPCM	
 ;________________________________________________________________________________________________________________________
 ADDITION:            
 	                MOV    AX, NUM1
 	                ADD    AX, NUM2
-                    push ax
-	                CALL   affichage       ; AFFICHER LE RESULTAT
+                    PUSH   AX
+	                CALL   affichage       
 					CALL   recommence
 ;________________________________________________________________________________________________________________________
 SOUSTR:         
 	                MOV    AX, NUM1
 	                SUB    AX, NUM2
-	                CALL   affichage        ; AFFICHER LE RESULTAT
+	                CALL   affichage       
 					CALL   recommence
 ;________________________________________________________________________________________________________________________
 MULTI:          
 	                MOV    AX, NUM1
-
-	                IMUL   NUM2           ; (dx:AX) = AX * num2.
-					CALL   affichage        ; AFFICHER LE RESULTAT
-					CALL   recommence
-	               		  ; dx sera ignorer (cALc fonctionne uniquement avec des nombres pas tres grand).
-
+	                IMUL   NUM2             			; (dx:AX) = AX * num2.
+					CALL   affichage       				; AFFICHER LE RESULTAT
+					CALL   recommence					; dx sera ignorer (caLc fonctionne uniquement avec des nombres pas tres grand).           		 
 ;________________________________________________________________________________________________________________________
 DO_DIV:       
-                    MOV X,2
-	; dx sera ignorer (cALc fonctionne uniquement avec des nombres pas tres grand).
-	                CMP    NUM2,0          	;; verifier que le denumerateur est different de 0
+	                CMP    NUM2,0          				; verifier que le denumerateur est different de 0
 	                JE     IMPOSSIBLE
-	                JMP    NEXTTT
-
+	               	    JMP    VALEUR_ABOSLU1
 	        IMPOSSIBLE:     
 	                MOV    AH,9H
 	                LEA    DX,MSG6
 	                INT    21H
 	                CALL   recommence
-
-	        NEXTTT:         
-	                MOV    DX, 0
-	                MOV    AX, NUM1
-	                CMP    SN1,1
-	                JE     NEGATIVE_NB1
-	                INC    X
-	                JMP    NEXT1
-
-	        NEGATIVE_NB1:   
-	                NEG    AX
-	                DEC    X
-
-	        NEXT1:          
-	                CMP    SN2,1
-	                JE     NEGATIVE_NB2
-	                INC    X
-	                JMP    NEXT2
-
-	        NEGATIVE_NB2:   
-	                NEG    NUM2
-	                DEC    X
-
-	        NEXT2:          
-	                CMP    X,2
-	                JE     NEGATIF
-	                CMP    X,0
-	                JE     DIVIS
-	                CMP    X,4
-	                JE     DIVIS
-	        NEGATIF:        
-	                INSERT '-'
+			VALEUR_ABOSLU1:
+					CMP     SN1,1
+	                JNE     VALEUR_ABOSLU2
+						NEG 	NUM1
+			VALEUR_ABOSLU2:
+					CMP     SN2,1
+	                JNE     DIVIS
+						NEG 	NUM2
 ;________________________________________________________________________________________________________________________
-	DIVIS:          
-	                IDIV   NUM2            	; AX = (dx AX) / num2.
-	                CMP    AX,0          	; comparer le resultat de division avec 0, si c le cas on decALe par un caractere et on le retire pour eviter d'afficher -0
-	                JE     SUPP_MOINS
-	                JMP    NEXTT
-	        SUPP_MOINS:                 
-	                INSERT 8              	; retour.
-	                INSERT ' '            	; remplacer le moins par ' '.
-	                INSERT 8              	; retour une autre fois
-	        NEXTT:          
+	DIVIS:           		
+					MOV    DX,0
+					MOV    AX,NUM1
+	                DIV   NUM2            				; AX = (DX:AX) / num2.
+	                CMP    AX,0        					; comparer le resultat de division avec 0, si c le cas on decale par un caractere et on le retire pour eviter d'afficher -0
+	                JNE    NEXTT
+	                CMP    SN2,1
+					JNE    NEXTT 
+	        SUPP_MOINS:             
+	                INSERT 8              				; retour.
+	                INSERT ' '            				; remplacer le moins par ' '.
+	                INSERT 8              				; retour une autre fois		
+	        NEXTT:          					
 	                CMP    DX, 0
 	                JNZ    AFF_RESTE
-
-	                CALL   affichage        	; AFFICHER RESULTAT
-	                CALL   recommence
-	        AFF_RESTE:      
-					CMP	   X,2
-					JE	   A_REGLER
-					JMP    DEJA_REGLER
-			A_REGLER:
-					CMP    sn1,1
-					JE	   TYPE1
-					JMP    DEJA_REGLER
-			TYPE1:
+	                   CALL   affichage        			; AFFICHER RESULTAT
+	               	   CALL   recommence
+	        AFF_RESTE:    
+				VERIF1:  
+					CMP	   SN1,1
+					JE	   VERIF2
+						CMP	   SN2,0
+						JE	   DEJA_REGLER
+							NEG    AX
+							JMP    DEJA_REGLER
+				VERIF2:
+					CMP	   SN2,1
+					JE	   DEJA_REGLER
+				TYPE1:
 					INC    AX
-					CALL   AFFICHAGE_RESULTAT
-					MOV    DH,00h
+					NEG    AX
 					SUB	   NUM2,DX
 					MOV    DX,NUM2
-					MOV    BL,DL
-					JMP	   prt_reste
 			DEJA_REGLER:
 	                CALL   AFFICHAGE_RESULTAT
-	                MOV    BX,DX
-			prt_reste:		
-	                CALL   CHANGE         	;CHANGER LA FORME DU RESTE
-					INSERT 0DH
-	                INSERT 0AH
-					LEA    DX, aff3_1
-	                CALL   RESULT         	;AFFICHER LE RESTE ET ON PREND COMPTE DE RETENUE
-                    CALL   AFFICHAGE_RESTE
-	                CALL   recommence
 ;________________________________________________________________________________________________________________________
 	DO_PGCD:
 	; but obtenir le PGCD des deux nombres.
@@ -316,24 +246,24 @@ DO_DIV:
 					CMP	   AX,0
 					JE     CAS1
 					CMP	   NUM2,0
-					JE     CAS2
-			CAS3:					;NUM1 et NUM2 diff de 0
+					   JE     CAS2
+			CAS3:									;NUM1 et NUM2 diff de 0
 					CMP    AX,NUM2
 					JGE    SMBR1
-					JL     SMBR2
-			SMBR1:					;Soustraction sur le membre 1 soit num1
+					    JL     SMBR2
+			SMBR1:									;Soustraction sur le membre 1 soit num1
 	                SUB    AX, NUM2
 	                JMP    CAS0
 	        SMBR2:
 					SUB    NUM2, AX
 	                JMP    CAS0
 	        
-			CAS1:					;NUM1 est egALe a 0 resultat cest NUM2
+			CAS1:									;NUM1 est egALe a 0 resultat cest NUM2
 					MOV    AX, NUM2
 					CALL   affichage
 					CALL   recommence
 					
-			CAS2:					;NUM2 est egALe a 0 resultat cest NUM1
+			CAS2:									;NUM2 est egALe a 0 resultat cest NUM1
 					MOV    AX, NUM1
 					CALL   affichage
 					CALL   recommence
@@ -347,8 +277,8 @@ DO_DIV:
 			ETA0:								;ETA0 etape initiALe tant que num1!=num2 ALors si num1>num2 eta1 sinon si num1<num2 eta2
 					CMP		AX, BX
 					JE		ETAF
-					JG		ETA1
-					JL		ETA2
+					   JG		ETA1
+					        JL		ETA2
 
 			ETA1:								;ETA1 BX+=NUM2
 					ADD		BX, NUM2
@@ -364,13 +294,13 @@ DO_DIV:
 VER_NEG PROC
 					CMP		SN1,1
 					JE		NEG1
-					JMP		CNT
+					   JMP		CNT
 			NEG1:
 					NEG		NUM1
 			CNT:
 					CMP		SN2,1
 					JE		NEG2
-					JMP		FIN_VER_NEG
+					   JMP		FIN_VER_NEG
 			NEG2:
 					NEG		NUM2
 
@@ -379,392 +309,232 @@ VER_NEG PROC
 VER_NEG ENDP			
 					
 ;________________________________________________________________________________________________________________________
-	;scan_num est INSPRIRE de emu8086.inc 
-	;avoir un nombre signee
-
-	;le resultat est enregistre dans CX
-SCAN_NUM        PROC    
-        			;Sauvgarder les registres 
+	
+SCAN_NUM        PROC    						;le resultat est enregistre dans CX
+        										;Sauvgarder les registres 
 					PUSH    DX
 					PUSH    AX
 					PUSH    SI
 					MOV     CX,0
 					INSERT  0DH
 					INSERT  0AH
-					; remettre le flag
-					MOV     moins, 0
+												
+					MOV     moins, 0			; remettre le flag
 
 			chiffre_suivant:
-					;obtenir le caractère du clavier
-					;et le mettre dans AL
+												;obtenir le caractère du clavier
+												;et le mettre dans AL
 					MOV     AH,00h
 					INT     16h
-					;verifier si cx est 0 donc si on tape le retour il faut initialiser le flag a 0
+												;verifier si cx est 0 donc si on tape le retour il faut initialiser le flag a 0
 					CMP 	CX,0
 					JNE 	aff
-					CMP 	AL,8
-					JNE 	aff
-					MOV 	moins,0
-					;afficher le caractere taper
+						CMP 	AL,8
+						JNE 	aff
+							MOV 	moins,0
+												;afficher le caractere taper
 			aff:
 					MOV     AH, 0Eh
 					INT     10h
-					; verifier si le charactere taper est -
+												; verifier si le charactere taper est -
 					CMP     AL, '-'
 					JE      set_minus
-					; verifier si le caractere taper c'est l'entrer 
-					; si c'est le cas on a fini la saisie, sinon on passe a la verification suivante
+												; verifier si le caractere taper c'est l'entrer 
+												; si c'est le cas on a fini la saisie, sinon on passe a la verification suivante
 					CMP     AL, 0Dh  
 					JNE     non_entrer
 					JMP     fin_saisie
 			non_entrer:
-					CMP     AL, 8                   ; verifier si le touche de retour est taper
-					JNE     verif_retour            
-					MOV     DX, 0                   ; si c'est le cas, on retire le chiffre precedent 
-					MOV     AX, CX                  ; division:
-					iDIV    dix                  ; AX = DX:AX / 10 (DX-rem).
+					CMP     AL, 8               ; verifier si le touche de retour est taper
+					JNE     verif_retour          
+
+					MOV     DX, 0               ; si c'est le cas, on retire le chiffre precedent 
+					MOV     AX, CX              ; division:
+					iDIV    dix                 ; AX = DX:AX / 10 (DX-rem).
 					MOV     CX, AX
-					insert  ' '                     ; position claire
-					insert  8                       ; retour une autre fois
+					insert  ' '                 ; position claire
+					insert  8                   ; retour une autre fois
 					JMP     chiffre_suivant
 			verif_retour:
-					; verifier s'il est compose que avec des chiffres
+												; verifier s'il est compose que avec des chiffres
 					CMP     AL, '0'
 					JAE     ok_AE_0
 					JMP     suppr_non_chiff
 			ok_AE_0:        
 					CMP     AL, '9'
-					JBE     verifier ; si le chiffre a passer tout les tests avec succes donc c'est verifier
+					JBE     verifier 			; si le chiffre a passer tout les tests avec succes donc c'est verifier
 			suppr_non_chiff:       
-					insert  8       ; retour.
-					insert  ' '     ; remplacer le caractere par ' '.
-					insert  8       ; retour une autre fois        
+					insert  8       			; retour.
+					insert  ' '     			; remplacer le caractere par ' '.
+					insert  8       			; retour une autre fois        
 					JMP     chiffre_suivant        
 			verifier:
-					; multiplier CX par 10 
+												; multiplier CX par 10 
 					PUSH    AX
 					MOV     AX, CX
-					IMUL    dix                  ; DX:AX = AX*10
+					IMUL    dix                 ; DX:AX = AX*10
 					MOV     CX, AX
 					POP     AX
-					; verifier si le nombre est tres grand
-					; (il faut que le resultat soit de 16 bits)
-					CMP     DX, 0
-					JNE     t_grand1
+														
+					CMP     DX, 0				; verifier si le nombre est tres grand
+					JNE     t_grand1			; (il faut que le resultat soit de 16 bits)
 
-					; convertir en decimaLe
-					SUB     AL, 30h
+					
+					SUB     AL, 30h				; convertir en decimaLe
 
-					; ajouter AL a CX:
+												; ajouter AL a CX:
 					MOV     AH, 0
-					MOV     DX, CX      ; sauvegarde, au cas où le résultat serait trop grand.
+					MOV     DX, CX     			; sauvegarde, au cas où le résultat serait trop grand.
 					ADD     CX, AX
-					JC      t_grand2    ; jump si le nombre est grand (jump if carry).
-					JMP     chiffre_suivant
+					JC      t_grand2   			; jump si le nombre est grand (jump if carry).
+					    JMP     chiffre_suivant
 
 			set_minus:
 					CMP		 moins,1
 					JE 		suppr_non_chiff
-					CMP 	CX,0
-					JNE 	suppr_non_chiff
-					MOV     moins, 1
-					JMP     chiffre_suivant
+						CMP 	CX,0
+						JNE 	suppr_non_chiff
+							MOV     moins, 1
+							JMP     chiffre_suivant
 			t_grand2:
-					MOV     CX, DX      ; restaurer la vALeur de sauvegarde avant d'ajouter.
-					MOV     DX, 0       ; DX était nul avant la sauvegarde
+					MOV     CX, DX      		; restaurer la vALeur de sauvegarde avant d'ajouter.
+					MOV     DX, 0      			; DX était nul avant la sauvegarde
 			t_grand1:
 					MOV     AX, CX
-					IDIV    dix  ; reverse last DX:AX = AX*10, make AX = DX:AX / 10
+					IDIV    dix  				; reverse last DX:AX = AX*10, make AX = DX:AX / 10
 					MOV     CX, AX
-					insert  8       ; retour.
-					insert  ' '     ; remplacer le caractere par ' '.
-					insert  8       ; retour une autre fois             
+					insert  8      				; retour.
+					insert  ' '    				; remplacer le caractere par ' '.
+					insert  8      				; retour une autre fois             
 					JMP     chiffre_suivant 
-			fin_saisie:
-					; verifier si le flag est a 0 ou 1
-					; si 0 on arrete 
-					;sinon NEG CX, (négation de CX)
-					CMP     moins, 0
-					JE      non_moins
-					NEG     CX
+			fin_saisie:							
+					CMP     moins, 0			; verifier si le flag est a 0 ou 1	
+					JE      non_moins			; si 0 on arrete 
+					NEG     CX					;sinon NEG CX, (négation de CX)
 			non_moins:      
-					;; recuperer les donnees
 					POP     SI
 					POP     AX
 					POP     DX
-					INSERT 0DH
-					INSERT 0AH
+					INSERT  0DH
+					INSERT  0AH
 					RET
 SCAN_NUM        ENDP
 ;________________________________________________________________________________________________________________________
-recommence proc 
-                    INSERT 0DH
-	                INSERT 0AH
-                    MOV AH,9H
-                    LEA DX,msg7
-                    INT 21H
+recommence proc             
+                    MOV     AH,9H
+                    LEA 	DX,msg7
+                    INT 	21H
 
-                    MOV ah,1h
-                    INT 21h 
+                    MOV 	ah,1h
+                    INT		21h 
                     
-                    CMP AL,'O'
-                    JB  fin_rec
-                    CMP AL,'O'
-                    JE  rec
-					CMP AL,'o'
-					JE  rec
-					JMP fin_rec
+                    CMP 	AL,'O'
+                    JB  	fin_rec
+                    	CMP 	AL,'O'
+                    	JE  	rec
+							CMP 	AL,'o'
+							JE  	rec
+								JMP	 	fin_rec
 			    rec: 
 					CALL main
 				fin_rec:
 					MOV ah,4ch
 					INT 21h
 recommence endp
-
-;________________________________________________________________________________________________________________________
-;pour changer le format du reste de ascii vers decimale
-CHANGE PROC
-	                MOV    AH,BH
-	                MOV    AL,BL
-
-	                MOV    BL,10
-	                DIV    BL
-
-                    ADC    AH,0
-
-	                MOV    BL,AL
-	                MOV    BH,AH
-
-	                ADD    BH,30H         	
-	                MOV    rest,BH
-
-	                MOV    AH,0
-	                MOV    AL,BL
-	                MOV    BL,10
-	                DIV    BL
-
-                ADC    AH,0
-
-	                MOV    BL,AL
-	                MOV    BH,AH
-
-	                ADD    BH,30h         	
-	                ADD    BL,30h         	
-
-	                RET
-CHANGE ENDP
-;________________________________________________________________________________________________________________________
-;pour afficher le reste apres convertir en format decimALe
-RESULT PROC
-	                MOV    AH,09H
-	                INT    21H
-                    LEA    DX, MSG5
-                    MOV    AH,09H
-	                INT    21H
-
-	                MOV    DL,BL
-	                MOV    AH,02H
-	                INT    21H
-
-	                MOV    DL,BH
-	                MOV    AH,02H
-	                INT    21H
-
-	                MOV    DL,rest
-	                MOV    AH,02H
-	                INT    21H
-
-	                RET
-RESULT ENDP
 ;________________________________________________________________________________________________________________________
     AFFICHAGE_RESULTAT PROC
-                    PUSH   AX
+                    PUSH   CX
 	                PUSH   BX
-	                PUSH   CX
 	                PUSH   DX
-                    mov    res,ax
-                    INSERT 0DH
-	                INSERT 0AH
+	                PUSH   AX
+					mov    reste,DX	
+                    
                     LEA    DX, aff1
 	                MOV    AH, 09H
 	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
+                    
                     LEA    DX, aff2
 	                MOV    AH, 09H
 	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff3_1
+
+					LEA    DX, msg4
 	                MOV    AH, 09H
 	                INT    21H
-                    LEA    DX, MSG4
-	                MOV    AH, 09H
-	                INT    21H
-                    mov    ax,res  
+
+                    pop    AX 
                     CALL   aff_res
-                    POP    DX
-	                POP    CX
+					CALL   AFFICHAGE_RESTE
+
+                    POP    AX
+	                POP    DX
 	                POP    BX
-	                POP    AX
+	                POP    CX
+					CALL   recommence
 	                RET
     AFFICHAGE_RESULTAT ENDP
+;________________________________________________________________________________________________________________________
     AFFICHAGE_RESTE PROC
                     PUSH   AX
 	                PUSH   BX
 	                PUSH   CX
 	                PUSH   DX
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff5
+						
+					LEA    DX, aff2
 	                MOV    AH, 09H
 	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff6
+
+					LEA    DX, msg5
 	                MOV    AH, 09H
 	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff7
+
+					MOV    AX,reste
+					CALL   aff_res
+					
+                    LEA    DX, aff3
 	                MOV    AH, 09H
 	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff8
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff9
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff10
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff11
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff12
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff13
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff14
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff15
-	                MOV    AH, 09H
-	                INT    21H
+
                     POP    DX
 	                POP    CX
 	                POP    BX
 	                POP    AX
 	                RET
     AFFICHAGE_RESTE ENDP
+;________________________________________________________________________________________________________________________
     AFFICHAGE PROC
                     PUSH   AX
 	                PUSH   BX
 	                PUSH   CX
 	                PUSH   DX
                     mov    res,ax
-                     INSERT 0DH
-	                INSERT 0AH
+
                     LEA    DX, aff1
 	                MOV    AH, 09H
 	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
+
                     LEA    DX, aff2
 	                MOV    AH, 09H
 	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff3_1
+
+					LEA    DX, msg4
 	                MOV    AH, 09H
 	                INT    21H
-                    LEA    DX, MSG4
-	                MOV    AH, 09H
-	                INT    21H
+
                     mov    ax,res  
                     CALL   aff_res
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff5
+
+                    LEA    DX, aff3
 	                MOV    AH, 09H
 	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff6
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff7
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff8
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff9
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff10
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff11
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff12
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff13
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff14
-	                MOV    AH, 09H
-	                INT    21H
-                    INSERT 0DH
-	                INSERT 0AH
-                    LEA    DX, aff15
-	                MOV    AH, 09H
-	                INT    21H
+
                     POP    DX
 	                POP    CX
 	                POP    BX
 	                POP    AX
 	                RET
     AFFICHAGE ENDP
-    	; cette procedure affiche le nombre dans AX
-	; utiliser avec AFF_RES_NS pour afficher les nombres non signee:
-AFF_RES PROC
+;________________________________________________________________________________________________________________________
+AFF_RES PROC								; cette procedure affiche le nombre dans AX et utiliser avec AFF_RES_NS pour afficher les nombres non signee
 	                PUSH   DX
 	                PUSH   AX
 	                CMP    AX, 0
@@ -772,62 +542,59 @@ AFF_RES PROC
 	                INSERT '0'
 	                JMP    PRINTED
 			NOT_ZERO:       
-	; vALeur Absolu si c'est negative
-	                CMP    AX, 0
+	                CMP    AX, 0		  	; vaLeur Absolu si c'est negative
 	                JNS    POSITIVE
 	                NEG    AX
-
 	                INSERT '-'
-
 			POSITIVE:       
 	                CALL   AFF_RES_NS
 			PRINTED:        
-	                POP    AX   ;res
-	                POP    DX   ;retenue
+	                POP    AX   			
+	                POP    DX   
 					RET
 AFF_RES ENDP
 
 ;________________________________________________________________________________________________________________________
-	; cette procedure affiche les nombres non signee
-AFF_RES_NS PROC
+AFF_RES_NS PROC								; cette procedure affiche les nombres non signee
 	                PUSH   AX
 	                PUSH   BX
 	                PUSH   CX
 	                PUSH   DX
-	; flag to prevent prINTing zeros before number:
-	                MOV    CX, 1
+	
+	                MOV    CX, 1			; flag to prevent printing zeros before number:
 
 	                MOV    BX, 10000
 
-	; AX zero?
-	                CMP    AX, 0
+	                CMP    AX, 0			; AX zero?
 	                JZ     AFFICHER_ZERO
 	BEGIN_PRINT:    
-	; verifier si le diviseur est egALe a 0:
-	                CMP    BX,0
+											
+	                CMP    BX,0				; verifier si le diviseur est egaLe a 0
 	                JZ     END_PRINT
-	; pour eviter d'ecrire des 0 avant le nombre:
-	                CMP    CX, 0
+	
+	                CMP    CX, 0			; pour eviter d'ecrire des 0 avant le nombre:
 	                JE     CALC
-	; si AX<BX ALors le resultat de division sera zero
-	; donc il faut qu'on essaye a chaque fois
-	                CMP    AX, BX
-	                JB     SKIP
+	
+	
+	                CMP    AX, BX			; si AX<BX ALors le resultat de division sera zero
+	                JB     SKIP				; donc il faut qu'on essaye a chaque fois
+
 	CALC:           
 	                MOV    CX, 0          	; set flag.
 	                MOV    DX, 0          	; initiALiser le reste a 0
 	                DIV    BX             	; AX = DX:AX / BX   (DX=le reste).
-	; on commence a afficher le dernier chiffre
-	; AH est toujourds ZERO, donc c'est ignorer
+
+											; on commence a afficher le dernier chiffre
+											; AH est toujourds ZERO, donc c'est ignorer
+
 	                ADD    AL, 30h        	; convertir a ASCII code.
 	                INSERT AL
 	                MOV    AX, DX         	; stocker le reste de derniere division
-	SKIP:           
-	;BX=BX/10
+	SKIP:           							;BX=BX/10
 	                PUSH   AX
-	                MOV 	   DX, 0
+	                MOV    DX, 0
 	                MOV    AX, BX
-	                iDIV    dix         	; AX = DX:AX / 10   (DX=le reste).
+	                iDIV   DIX         		; AX = DX:AX / 10   (DX=le reste).
 	                MOV    BX, AX
 	                POP    AX
 	                JMP    BEGIN_PRINT       
